@@ -1,0 +1,12 @@
+modules_enabled_by_default = "no"
+module_gdscript_enabled = "yes"
+module_regex_enabled = "yes"
+module_svg_enabled = "yes"
+module_freetype_enabled = "yes"
+module_text_server_adv_enabled = "yes"
+module_godot_physics_2d_enabled = "yes"
+module_ai_engine_enabled = "yes"
+
+disable_3d = "yes"
+disable_advanced_gui = "yes"
+disable_xr = "yes"
