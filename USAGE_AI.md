@@ -1,56 +1,59 @@
 # AI Game Engine (Godot AI Edition) - Usage Guide
 
-This guide explains how to build and use the minimal, AI-driven version of Godot you've just created.
+This guide explains how to build, run, and use the AI-driven features of this engine.
 
-## 1. Building the Engine
+## 1. Capabilities: What can you do?
 
-To address the "bloated" issue, use the `ai_profile.py` build configuration. This profile disables 3D, XR, and many non-essential modules.
+The `AIEngine` module allows you to control the game world using natural language through the GLM-5 model. Key capabilities include:
 
-**For Linux (template_debug):**
+- **Entity Spawning**: "Spawn a player sprite named Hero."
+- **Property Modification**: "Move the Hero to position 500, 300."
+- **Behavior Triggering**: "Hide the Enemy", "Make the Player jump" (requires the node to have a `jump` method).
+- **Batch Processing**: Complex instructions like "Create a scene with a blue background and a player in the middle" are parsed into multiple actions.
+
+## 2. Quick Start: How to Run
+
+### Step A: Build the Engine
+Use the minimalist profile to ensure a lean and fast engine.
+
 ```bash
 scons profile=ai_profile platform=linuxbsd target=template_debug -j$(nproc)
 ```
 
-## 2. Using the `AIEngine` Module in Godot (GDScript)
+**Note:** If `profile` argument is not recognized on your system, you can use the profile contents directly as command-line arguments.
 
-The `AIEngine` class is now integrated with GLM-5. You can drive the engine directly from GDScript using natural language.
+### Step B: Create a Simple Scene
+1. Create a new Godot scene.
+2. Add an `AIEngine` node to the scene.
+3. Attach a script to the root node:
 
 ```gdscript
 extends Node
 
-@onready var ai_engine = AIEngine.new()
+@onready var ai = $AIEngine # Assuming you added the node
 
 func _ready():
-    add_child(ai_engine)
+    # 1. Configure
+    ai.api_key = "YOUR_ZHIPUAI_API_KEY"
+    ai.model_name = "glm-4" # Or "glm-5"
 
-    # 1. Setup your ZhipuAI API Key
-    ai_engine.api_key = "YOUR_ZHIPUAI_API_KEY"
-    ai_engine.model_name = "glm-4" # or "glm-5" when available
+    # 2. Connect (optional)
+    ai.ai_response_received.connect(func(res): print("AI says: ", res))
 
-    # 2. Connect to the response signal (optional)
-    ai_engine.ai_response_received.connect(_on_ai_response)
-
-    # 3. Prompt the AI to build something!
-    # This will automatically call spawn_entity and execute_command internally.
-    ai_engine.prompt_ai("Spawn a player sprite and set its position to 200, 200")
-
-func _on_ai_response(response: String):
-    print("AI Response (JSON): ", response)
+    # 3. Drive the engine!
+    ai.prompt_ai("Spawn a Node2D named MyObject and move it to 100, 100")
 ```
 
-## 3. Simplified API Reference (C++)
+## 3. Supported JSON Actions (Internal)
 
-The `AIEngine` node provides several key methods exposed to GDScript:
+If you want to send raw commands without using the AI prompt, use `execute_command()` with these formats:
 
-- `prompt_ai(prompt: String)`: Asynchronously queries GLM-5 and executes the returned JSON commands.
-- `execute_command(json: String)`: Manually execute a structured JSON command.
-- `spawn_entity(type: String, name: String)`: Spawns a node of any valid engine type.
-- `api_key`: Your ZhipuAI API key.
-- `model_name`: The model to use (default "glm-4").
+- **Spawn**: `{"action": "spawn", "type": "Node2D", "name": "Player"}`
+- **Set**: `{"action": "set", "target": "Player", "property": "position", "value": [100, 200]}`
+- **Call**: `{"action": "call", "target": "Player", "method": "hide", "args": []}`
 
-## 4. How it Works
+## 4. Why this is better for AI models
 
-1.  **Direct Integration:** The `AIEngine` module uses Godot's `HTTPClient` to communicate directly with ZhipuAI's servers.
-2.  **Automatic Parsing:** It enforces a JSON-only response format via a system prompt.
-3.  **Engine Reflection:** It uses Godot's `ClassDB` to instantiate any registered class by name, making it incredibly flexible.
-4.  **Minimalist Build:** By using `ai_profile.py`, you get an engine that is fast, lightweight, and perfect for embedding in AI-driven applications.
+- **Simplified Context**: The AI only needs to know about these 3 high-level actions rather than the entire Godot API.
+- **Robustness**: JSON is less prone to syntax errors than generating full GDScript code.
+- **Direct Integration**: No external Python scripts are required; the engine talks directly to the AI model.

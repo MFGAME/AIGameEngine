@@ -1,7 +1,6 @@
 #include "ai_engine.h"
 #include "core/io/json.h"
 #include "core/object/class_db.h"
-#include "core/os/os.h"
 
 Node *AIEngine::spawn_entity(const String &p_type, const String &p_name) {
 	Object *obj = ClassDB::instantiate(p_type);
@@ -54,6 +53,17 @@ void AIEngine::execute_command(const String &p_json) {
 		} else {
 			ERR_PRINT("Target not found for set command: " + target_name);
 		}
+	} else if (action == "call") {
+		String target_name = dict.get("target", "");
+		String method = dict.get("method", "");
+		Array args = dict.get("args", Array());
+
+		Node *target = find_child(target_name);
+		if (target) {
+			target->callv(method, args);
+		} else {
+			ERR_PRINT("Target not found for call command: " + target_name);
+		}
 	} else {
 		ERR_PRINT("Unknown AI action: " + action);
 	}
@@ -85,7 +95,7 @@ Error AIEngine::prompt_ai(const String &p_prompt) {
 		return ERR_BUSY;
 	}
 
-	http = HTTPClient::create();
+	http.instantiate();
 	Error err = http->connect_to_host("open.bigmodel.cn", 443, true);
 	if (err != OK) {
 		return err;
@@ -97,7 +107,11 @@ Error AIEngine::prompt_ai(const String &p_prompt) {
 	// Prepare payload
 	Dictionary system_msg;
 	system_msg["role"] = "system";
-	system_msg["content"] = "You are a game design engine assistant. Output ONLY a valid JSON command like {\"action\": \"spawn\", \"type\": \"Node2D\", \"name\": \"Player\"} or {\"action\": \"set\", \"target\": \"Player\", \"property\": \"position\", \"value\": [100, 200]}. No preamble, no explanation.";
+	system_msg["content"] = "You are a game design engine assistant. Output ONLY a valid JSON command like "
+							 "{\"action\": \"spawn\", \"type\": \"Node2D\", \"name\": \"Player\"} or "
+							 "{\"action\": \"set\", \"target\": \"Player\", \"property\": \"position\", \"value\": [100, 200]} or "
+							 "{\"action\": \"call\", \"target\": \"Player\", \"method\": \"hide\", \"args\": []}. "
+							 "No preamble, no explanation.";
 
 	Dictionary user_msg;
 	user_msg["role"] = "user";

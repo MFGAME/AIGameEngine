@@ -30,6 +30,19 @@ TEST_CASE("[AIEngine] Execute Command Spawn") {
 	memdelete(ai);
 }
 
+TEST_CASE("[AIEngine] Execute Command Call") {
+	AIEngine *ai = memnew(AIEngine);
+	Node *node = ai->spawn_entity("Node2D", "Player");
+	REQUIRE(node->is_visible());
+
+	String json_cmd = "{\"action\": \"call\", \"target\": \"Player\", \"method\": \"hide\", \"args\": []}";
+	ai->execute_command(json_cmd);
+
+	CHECK(node->is_visible() == false);
+
+	memdelete(ai);
+}
+
 TEST_CASE("[AIEngine] API Key and Model Name") {
 	AIEngine *ai = memnew(AIEngine);
 	ai->set_api_key("test_key");
