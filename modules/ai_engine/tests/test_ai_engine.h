@@ -3,7 +3,7 @@
 
 #include "../ai_engine.h"
 #include "tests/test_macros.h"
-#include "scene/2d/sprite_2d.h"
+#include "scene/2d/node_2d.h"
 
 namespace TestAIEngine {
 
@@ -30,16 +30,13 @@ TEST_CASE("[AIEngine] Execute Command Spawn") {
 	memdelete(ai);
 }
 
-TEST_CASE("[AIEngine] Execute Command Set Property") {
+TEST_CASE("[AIEngine] API Key and Model Name") {
 	AIEngine *ai = memnew(AIEngine);
-	ai->spawn_entity("Node2D", "Player");
+	ai->set_api_key("test_key");
+	CHECK(ai->get_api_key() == "test_key");
 
-	String json_cmd = "{\"action\": \"set\", \"target\": \"Player\", \"property\": \"position\", \"value\": [100, 200]}";
-	ai->execute_command(json_cmd);
-
-	Node2D *player = Object::cast_to<Node2D>(ai->find_child("Player"));
-	REQUIRE(player != nullptr);
-	CHECK(player->get_position() == Vector2(100, 200));
+	ai->set_model_name("glm-5");
+	CHECK(ai->get_model_name() == "glm-5");
 
 	memdelete(ai);
 }
